@@ -8,20 +8,17 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# Set the working directory in the container
+# Set the working directory
 WORKDIR /app
 
-# Copy requirements file into the container
+# Copy requirements.txt first to install dependencies
 COPY requirements.txt .
 
-# Install the necessary packages
+# Install the required Python packages
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the rest of the application code into the container
+# Copy the rest of your application code
 COPY . .
 
-# Expose the port that your FastAPI app will run on
-EXPOSE 8000
-
-# Command to run the FastAPI application with Uvicorn
-CMD ["uvicorn", "application:app", "--host", "0.0.0.0", "--port", "8000"]
+# Command to run your MQTT test script
+CMD ["python", "mqtt_test.py"]

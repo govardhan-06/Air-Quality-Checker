@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Air Quality Data</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f4;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+
+        .container {
+            width: 80%;
+            margin: auto;
+        }
+
+        .sensor-data {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .sensor-data h2 {
+            color: #0056b3;
+        }
+
+        .sensor-data p {
+            line-height: 1.6;
+            font-size: 1.1em;
+        }
+
+        #history-graph {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        canvas {
+            width: 100%;
+            height: 400px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>Air Quality Data</h1>
+
+        <div id="latest-data" class="sensor-data">
+            <h2>Latest Air Quality Data</h2>
+            <p><strong>Sensor ID:</strong> <span id="sensor-id"></span></p>
+            <p><strong>Location:</strong> <span id="location"></span></p>
+            <p><strong>CO2 Level:</strong> <span id="co2"></span> ppm</p>
+            <p><strong>PM2.5 Level:</strong> <span id="pm25"></span> µg/m³</p>
+            <p><strong>NO2 Level:</strong> <span id="no2"></span> ppb</p>
+        </div>
+
+        <div id="history-graph">
+            <h2>Air Quality History (Last 30 Entries)</h2>
+            <canvas id="historyChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // Fetch latest air quality data
+        fetch('http://localhost:8000/air-quality/latest')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('sensor-id').textContent = data.sensor_id;
+                document.getElementById('location').textContent = data.location;
+                document.getElementById('co2').textContent = data.co2_level;
+                document.getElementById('pm25').textContent = data.pm25_level;
+                document.getElementById('no2').textContent = data.no2_level;
+            })
+            .catch(error => console.error('Error fetching latest data:', error));
+
+        // Fetch air quality history and plot a graph
+        fetch('http://localhost:8000/air-quality/history')
+            .then(response => response.json())
+            .then(historyData => {
+                const ctx = document.getElementById('historyChart').getContext('2d');
+                const labels = historyData.map(entry => new Date(entry.created_at).toLocaleString());
+                const co2Levels = historyData.map(entry => entry.co2_level);
+                const pm25Levels = historyData.map(entry => entry.pm25_level);
+                const no2Levels = historyData.map(entry => entry.no2_level);
+
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: 'CO2 Level (ppm)',
+                                data: co2Levels,
+                                borderColor: 'rgba(255, 99, 132, 1)',
+                                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                                borderWidth: 2,
+                                fill: true
+                            },
+                            {
+                                label: 'PM2.5 Level (µg/m³)',
+                                data: pm25Levels,
+                                borderColor: 'rgba(54, 162, 235, 1)',
+                                backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                                borderWidth: 2,
+                                fill: true
+                            },
+                            {
+                                label: 'NO2 Level (ppb)',
+                                data: no2Levels,
+                                borderColor: 'rgba(75, 192, 192, 1)',
+                                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                                borderWidth: 2,
+                                fill: true
+                            }
+                        ]
+                    },
+                    options: {
+                        scales: {
+                            x: {
+                                display: true,
+                                title: {
+                                    display: true,
+                                    text: 'Time'
+                                }
+                            },
+                            y: {
+                                display: true,
+                                title: {
+                                    display: true,
+                                    text: 'Levels'
+                                }
+                            }
+                        }
+                    }
+                });
+            })
+            .catch(error => console.error('Error fetching history data:', error));
+
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</body>
+
+</html>
